@@ -1,12 +1,11 @@
 export interface Block {
-    timestamp: Date;
+    timestamp: string;
     uid: string;
 
     contents: SubBlock[];
 }
 
 export interface SubBlock {
-    timestamp: Date;
     uid: string;
 
     tags: Tag[];

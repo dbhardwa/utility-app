@@ -4,7 +4,7 @@ import SubBlockUnit from './SubBlockUnit';
 
 function BlockUnit(props: BlockUnitProps) {
     return (
-        <div className="sub-block-container">
+        <div className="block-unit">
             {props.block.uid}
             {props.block.contents.map((subBlock: SubBlock) => (
                 <SubBlockUnit subBlock={subBlock} key={subBlock.uid} deleteEntry={props.deleteEntry} />

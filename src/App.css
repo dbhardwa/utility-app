@@ -1,0 +1,23 @@
+body {
+    font-family: menlo;
+}
+
+.block-unit {
+    padding: 12px;
+    border: 1px solid rgba(161, 206, 206, 0.322);
+    width: fit-content;
+    margin: 20px;
+}
+
+.sub-block-unit {
+    margin: 10px 0;
+}
+
+.tool-bar {
+    margin: 20px;
+    
+}
+
+.tool-bar > * {
+    margin: 0 5px;
+}

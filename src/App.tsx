@@ -1,18 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Block, SubBlock, Tag } from './models/block';
+import { Block, SubBlock, Tag, FilterInputs } from './models/block';
 import { generateUID } from './utility';
 import BlockUnit from './components/BlockUnit';
 import ToolBar from './components/ToolBar';
 import * as mockBlocks from './mocks/blocks.json';
 
+// TODO: There needs to be a mechanism to ensure the blocks are always sorted by 'timestamp'.
+// TODO: Right now the 'uid's are not truly unique. To do that we'll need a helper function.
 function App() {
-    // TODO: There needs to be a mechanism to ensure the blocks are always sorted by 'timestamp'.
-    // TODO: Right now the 'uid's are not truly unique. To do that we'll need a helper function.
-
     // @ts-ignore
     const [blocks, setBlocks] = useState<Block[]>(mockBlocks['default']);
     const [filteredBlocks, setFilteredBlocks] = useState<Block[] | undefined>(undefined);
+    const [filterInputs, setFilterInputs] = useState<FilterInputs>({ query: '', tags: [], date: null });
+
+    useEffect(() => {
+        const { query, tags, date } = filterInputs;
+
+        if (!query && !tags.length && !date) {
+            setFilteredBlocks(undefined);
+        } else {
+            runFilters();
+        }
+    }, [filterInputs, blocks]);
 
     function createNewEntry() {
         // 1. Generate 'timestamp' and 'UID'.
@@ -45,6 +55,18 @@ function App() {
         }
     }
 
+    function evaluateBlockContents(block: Block, prevContents: SubBlock[], updatedContents: SubBlock[]): Block | null {
+        // 1. Something was deleted in this block.
+        if (updatedContents.length !== prevContents.length) {
+            if (!updatedContents.length) { // The sub-block deleted was the only sub-block.
+                return null;
+            } else { // The sub-block deleted was one of many.
+                return { ...block, contents: updatedContents };
+            }
+        } else // 2. Nothing was deleted in this block. 
+            return block;
+    }
+
     // NOTE: 
     // This function assumes 'uid' is truly unique (which should be the case).
     // Not sure if it is necessary to handle this otherwise.
@@ -53,80 +75,58 @@ function App() {
 
         let updatedBlocks = blocks.map(block => {
             updatedContents = block.contents.filter(subBlock => subBlock.uid !== uid);
-
-            // 1. Something was deleted in this block.
-            if (updatedContents.length !== block.contents.length) {
-                if (!updatedContents.length) { // The sub-block deleted was the only sub-block.
-                    return null;
-                } else { // The sub-block deleted was one of many.
-                    return { ...block, contents: updatedContents };
-                }
-            } else // 2. Nothing was deleted in this block. 
-                return block;
+            return evaluateBlockContents(block, block.contents, updatedContents);
         }).filter((block): block is Block => block !== null);
 
         setBlocks(updatedBlocks);
     }
 
-    // TODO: Will need to be tested and validated when 'template' field of sub-blocks becomes occupied.
-    function queryEntries(query: string) {
+    function filterQuery(query: string, source: Block[]): Block[] {
         let filteredContents: SubBlock[];
 
-        // 1. Iterate through each sub-block of all blocks.
-        let queriedBlocks = blocks.map(block => {
+        return source.map(block => {
             filteredContents = block.contents.filter(subBlock => subBlock.template.toLowerCase().includes(query));
-
-            // TODO: Exact same logic re-used.
-            if (filteredContents.length !== block.contents.length) {
-                if (!filteredContents.length) {
-                    return null;
-                } else {
-                    return { ...block, contents: filteredContents };
-                }
-            } else
-                return block;
+            return evaluateBlockContents(block, block.contents, filteredContents);
         }).filter((block): block is Block => block !== null);
-
-        // TODO: Cannot just pass undefined, there may be other filters, need to develop an appropriate mechanism.
-        setFilteredBlocks(queriedBlocks);
     }
 
-    // TODO: This should filter based on pre-existing filteredBlocks value.
-    function filterTags(tags: Tag[]) {
-        if (!tags.length) {
-            setFilteredBlocks(undefined);
-            return;
-        }
-
+    function filterTags(tags: Tag[], source: Block[]): Block[] {
         let filteredContents: SubBlock[];
 
-        let updatedBlocks = blocks.map(block => {
+        return source.map(block => {
             filteredContents = block.contents.filter(subBlock => {
                 return subBlock.tags.some(subBlockTag => {
                     return tags.some(inputTag => inputTag === subBlockTag);
                 });
             });
 
-            // TODO: Exact same logic re-used.
-            if (filteredContents.length !== block.contents.length) {
-                if (!filteredContents.length) {
-                    return null;
-                } else {
-                    return { ...block, contents: filteredContents };
-                }
-            } else
-                return block;
+            return evaluateBlockContents(block, block.contents, filteredContents);
         }).filter((block): block is Block => block !== null);
+    }
 
-        setFilteredBlocks(updatedBlocks);
+    function filterCalendar(timestamp: string, source: Block[]): Block[] {
+        return source.filter(block => block.timestamp === timestamp);
+    }
+
+    function runFilters() {
+        const { query, tags, date } = filterInputs;
+
+        // NOTES: As long as these are synchronous operations, there is no race condition.
+        let source = blocks;
+        if (query) source = filterQuery(query, source);
+        if (tags.length > 0) source = filterTags(tags, source);
+        if (date) source = filterCalendar(date.toDateString(), source);
+
+        setFilteredBlocks(source);
     }
 
     return (
         <div className="App">
             <ToolBar
+                filterInputs={filterInputs}
+                setFilterInputs={setFilterInputs}
+                blockDates={blocks.map(block => new Date(block.timestamp))}
                 createNewEntry={createNewEntry}
-                queryEntries={queryEntries}
-                filterTags={filterTags}
             />
             {/* NOTE: This should ideally be a component (i.e. BlockContainer), have to deal with prop drilling though. */}
             <div className="blocks">

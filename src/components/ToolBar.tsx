@@ -1,17 +1,15 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react'
-import { Tag } from '../models/block';
+import React, { ChangeEvent } from 'react'
+import { Tag, FilterInputs } from '../models/block';
 import * as mockTags from '../mocks/tags.json';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import '../App.css';
 
 function ToolBar(props: ToolBarProps) {
-    const [query, setQuery] = useState<string>('');
     // @ts-ignore
-    const [tags, setTags] = useState<Tag[]>(mockTags['default']);
-
-    function handleQuery(inputQuery: string) {
-        // TODO: Might want to process the data before passing to props.
-        setQuery(inputQuery);
-        props.queryEntries(inputQuery);
-    }
+    const allTags = mockTags['default'];
+    console.log('inside toolbar:', props.filterInputs);
+    const { query, tags, date } = props.filterInputs;
 
     function handleTagMultiSelect(event: ChangeEvent) {
         let target = event.nativeEvent.target as HTMLSelectElement,
@@ -22,29 +20,52 @@ function ToolBar(props: ToolBarProps) {
             selectedTags.push(tag.value);
         }
 
-        console.log(selectedTags);
-        props.filterTags(selectedTags);
+        props.setFilterInputs({ ...props.filterInputs, tags: selectedTags });
     }
 
     return (
         <div className="tool-bar">
-            <button onClick={() => props.createNewEntry()}>
-                ADD ENTRY
-            </button>
-            <input type="text" value={query} onChange={(event) => handleQuery(event.target.value)} />
+            <div className="date-picker">
+                <DatePicker
+                    selected={date}
+                    onChange={(date: Date | null) => props.setFilterInputs({ ...props.filterInputs, date })}
+                    showPopperArrow={false}
+                    dateFormat="E MMMM dd yyyy"
+                    highlightDates={[{
+                        'highlight-date': props.blockDates
+                    }]}
+                    placeholderText="Filter by date"
+                    maxDate={new Date()}
+                />
+            </div>
+            <input
+                type="text"
+                value={query}
+                onChange={(event) => props.setFilterInputs({ ...props.filterInputs, query: event.target.value })}
+            />
+
             <select multiple onChange={handleTagMultiSelect}>
-                {tags.map(tag => (
+                {allTags.map((tag: Tag) => (
                     <option value={tag}>#{tag}</option>
                 ))}
             </select>
+            <button onClick={() => props.createNewEntry()}>
+                ADD ENTRY
+            </button>
+            {(query || tags.length > 0 || date) && (
+                <button onClick={() => props.setFilterInputs({ query: '', tags: [], date: null })}>Clear Filters</button>
+            )}
         </div>
+
+        /* NOTE: This is not a controlled component, but this element is tentative anyways. */
     );
 }
 
 interface ToolBarProps {
+    filterInputs: FilterInputs;
+    setFilterInputs: Function;
+    blockDates: Date[];
     createNewEntry: Function;
-    queryEntries: Function;
-    filterTags: Function;
 }
 
 export default ToolBar;

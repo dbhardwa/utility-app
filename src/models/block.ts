@@ -13,4 +13,10 @@ export interface SubBlock {
     template: string;
 }
 
+export interface FilterInputs {
+    query: string;
+    tags: Tag[];
+    date: Date | null;
+}
+
 export type Tag = string;

@@ -11,6 +11,8 @@ body {
 
 .sub-block-unit {
     margin: 10px 0;
+    padding: 12px;
+    border: 1px solid rgba(76, 85, 85, 0.116);
 }
 
 .tool-bar {
@@ -19,5 +21,18 @@ body {
 }
 
 .tool-bar > * {
-    margin: 0 5px;
+    margin-right: 10px;
+}
+
+.date-picker {
+    display: inline-block;
+}
+
+.react-datepicker {
+    font-family: menlo !important;
+}
+
+.highlight-date {
+    background: #dbd0ff;
+    border-radius: 3px;
 }

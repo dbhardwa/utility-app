@@ -51,10 +51,12 @@ function App() {
         } else { // 4. Else generate a new sub-block in existing block (in a immutable fashion).
             const updatedBlocks = blocks.map((block: Block) => {
                 if (block.timestamp === timestamp) {
-                    return {
+                    const newBlock = {
                         ...block,
                         contents: [...block.contents, { uid, tags: [], template: '' }]
-                    }
+                    };
+                    setCurrentBlock(newBlock);
+                    return newBlock;
                 } else return block;
             });
 

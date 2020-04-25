@@ -15,6 +15,16 @@ body {
     border: 1px solid rgba(76, 85, 85, 0.116);
 }
 
+.tag, a {
+    color: #e6c003;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.highlight-query {
+    background-color: aqua;
+}
+
 .tool-bar {
     margin: 20px;
     

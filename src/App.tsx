@@ -14,6 +14,15 @@ function App() {
     const [filteredBlocks, setFilteredBlocks] = useState<Block[] | undefined>(undefined);
     const [filterInputs, setFilterInputs] = useState<FilterInputs>({ query: '', tags: [], date: null });
 
+    const [currentBlock, setCurrentBlock] = useState<Block | null>(null);
+
+    useEffect(() => {
+        // NOTE: Needs validation that this is working properly.
+        let timestamp = new Date().toDateString();
+        const currentBlock = blocks.find(block => block.timestamp === timestamp);
+        currentBlock ? setCurrentBlock(currentBlock) : setCurrentBlock(null);
+    }, []);
+
     useEffect(() => {
         const { query, tags, date } = filterInputs;
 
@@ -22,7 +31,7 @@ function App() {
         } else {
             runFilters();
         }
-    }, [filterInputs, blocks]);
+    }, [filterInputs, blocks, currentBlock]);
 
     function createNewEntry() {
         // 1. Generate 'timestamp' and 'UID'.
@@ -31,16 +40,14 @@ function App() {
             timestamp = date.toDateString();
 
         // 2. Check if a block for the current day has been made.
-        const currentBlock = blocks.find(block => block.timestamp === timestamp);
+        // const currentBlock = blocks.find(block => block.timestamp === timestamp);
 
         // 3. If block for current day does not exist, generate a block (and subsequeny sub-block).
         if (!currentBlock) {
             // TODO: This should ideally create an instance (i.e. new Block(date)).
-            setBlocks([
-                ...blocks,
-                { uid, timestamp, contents: [{ uid, tags: [], template: '' }] }
-            ]);
-
+            const newBlock = { timestamp, uid, contents: [{ uid, tags: [], template: '' }] };
+            setCurrentBlock(newBlock);
+            setBlocks([...blocks, newBlock]);
         } else { // 4. Else generate a new sub-block in existing block (in a immutable fashion).
             const updatedBlocks = blocks.map((block: Block) => {
                 if (block.timestamp === timestamp) {
@@ -111,11 +118,14 @@ function App() {
     function runFilters() {
         const { query, tags, date } = filterInputs;
 
-        // NOTES: As long as these are synchronous operations, there is no race condition.
-        let source = blocks;
+        // NOTE: As long as these are synchronous operations, there is no race condition.
+        let source = currentBlock ? blocks.slice(0, blocks.length - 1) : blocks;
+
         if (query) source = filterQuery(query, source);
         if (tags.length > 0) source = filterTags(tags, source);
         if (date) source = filterCalendar(date.toDateString(), source);
+
+        if (currentBlock) source = [...source, currentBlock];
 
         setFilteredBlocks(source);
     }
@@ -131,8 +141,18 @@ function App() {
             {/* NOTE: This should ideally be a component (i.e. BlockContainer), have to deal with prop drilling though. */}
             <div className="blocks">
                 {(filteredBlocks || blocks).map((block: Block) => (
-                    <BlockUnit block={block} key={block.uid} deleteEntry={deleteEntry} />
-                ))}
+                    <BlockUnit
+                        block={block}
+                        key={block.uid}
+                        // TODO: These below are being prop drilled at the moment.    
+                        deleteEntry={deleteEntry}
+                        setTag={(tag: Tag) => {
+                            if (!filterInputs.tags.includes(tag))
+                                setFilterInputs({ ...filterInputs, tags: [...filterInputs.tags, tag] });
+                        }}
+                        query={filterInputs.query}
+                    />
+                )).reverse()}
             </div>
         </div>
     );

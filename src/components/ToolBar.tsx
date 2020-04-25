@@ -8,7 +8,6 @@ import '../App.css';
 function ToolBar(props: ToolBarProps) {
     // @ts-ignore
     const allTags = mockTags['default'];
-    console.log('inside toolbar:', props.filterInputs);
     const { query, tags, date } = props.filterInputs;
 
     function handleTagMultiSelect(event: ChangeEvent) {

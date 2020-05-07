@@ -1,0 +1,18 @@
+.quill {
+    margin: 15px 0;
+}
+
+.editable {
+    outline: 1px solid rgba(76, 85, 85, 0.116);
+}
+
+.ql-editor {
+    font-family: menlo;
+    font-size: 17px;
+    padding: 0;
+    outline: 1px solid rgba(76, 85, 85, 0.116);
+}
+
+.ql-done::after {
+    content: 'Done';
+}

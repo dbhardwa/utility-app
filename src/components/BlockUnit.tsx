@@ -23,7 +23,7 @@ interface BlockUnitProps {
     block: Block;
     deleteEntry: Function;
     setTag: Function;
-    query: string
+    query: string;
 }
 
 export default BlockUnit;

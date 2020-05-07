@@ -4,7 +4,7 @@ body {
 
 .block-unit {
     padding: 12px;
-    border: 1px solid rgba(161, 206, 206, 0.322);
+    border: 1px solid rgba(76, 85, 85, 0.116);
     width: fit-content;
     margin: 20px;
 }
@@ -21,19 +21,16 @@ body {
     cursor: pointer;
 }
 
-.highlight-query {
-    background-color: aqua;
-}
-
+/* Toolbar Styling */
 .tool-bar {
-    margin: 20px;
-    
+    margin: 20px;    
 }
 
 .tool-bar > * {
     margin-right: 10px;
 }
 
+/* Date Picker Styling */
 .date-picker {
     display: inline-block;
 }

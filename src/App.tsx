@@ -6,11 +6,10 @@ import BlockUnit from './components/BlockUnit';
 import ToolBar from './components/ToolBar';
 import * as mockBlocks from './mocks/blocks.json';
 
-// TODO: There needs to be a mechanism to ensure the blocks are always sorted by 'timestamp'.
 // TODO: Right now the 'uid's are not truly unique. To do that we'll need a helper function.
 function App() {
-    // @ts-ignore
-    const [blocks, setBlocks] = useState<Block[]>(mockBlocks['default']);
+    // @ts-ignore (mockBlocks['default'])
+    const [blocks, setBlocks] = useState<Block[]>([]);
     const [filteredBlocks, setFilteredBlocks] = useState<Block[] | undefined>(undefined);
     const [filterInputs, setFilterInputs] = useState<FilterInputs>({ query: '', tags: [], date: null });
 
@@ -94,7 +93,7 @@ function App() {
         let filteredContents: SubBlock[];
 
         return source.map(block => {
-            filteredContents = block.contents.filter(subBlock => subBlock.template.toLowerCase().includes(query));
+            filteredContents = block.contents.filter(subBlock => subBlock.template.toLowerCase().includes(query.toLowerCase()));
             return evaluateBlockContents(block, block.contents, filteredContents);
         }).filter((block): block is Block => block !== null);
     }

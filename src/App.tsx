@@ -7,6 +7,10 @@ import ToolBar from './components/ToolBar';
 import * as mockBlocks from './mocks/blocks.json';
 import axios from 'axios';
 
+const electron = window.require('electron');
+const fs = electron.remote.require('fs');
+
+
 // TODO: Right now the 'uid's are not truly unique. To do that we'll need a helper function.
 function App() {
     // @ts-ignore (mockBlocks['default'])
@@ -17,12 +21,22 @@ function App() {
     const [currentBlock, setCurrentBlock] = useState<Block | null>(null);
 
     useEffect(() => {
+        console.log('test');
+        fs.readFile('/Users/devansh/Desktop/utility-data/blocks.json', (error: Error, data: any) => {
+            if (error) console.log(error);
+            // let myData = JSON.stringify(data);
+            const myData = JSON.parse(data.toString());
+            // let myData = JSON.parse(data);
+            console.log("DATA:", myData);
+            console.log(Object.prototype.toString.call(myData.data));
+            setBlocks(myData);
+        });
 
-        axios.get('/blocks')
-            .then((data) => {
-                setBlocks(data.data);
-            })
-            .catch((error) => console.log(error));
+        // axios.get('/blocks')
+        //     .then((data) => {
+        //         setBlocks(data.data);
+        //     })
+        //     .catch((error) => console.log(error));
 
         // NOTE: Needs validation that this is working properly.
         let timestamp = new Date().toDateString();

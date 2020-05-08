@@ -19,11 +19,14 @@
         "react-scripts": "3.4.1",
         "typescript": "~3.7.2"
     },
+    "homepage": "./",
+    "main": "public/electron.js",
     "scripts": {
         "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
-        "eject": "react-scripts eject"
+        "eject": "react-scripts eject",
+        "electron": "electron ."
     },
     "eslintConfig": {
         "extends": "react-app"
@@ -40,5 +43,8 @@
             "last 1 safari version"
         ]
     },
-    "proxy": "http://localhost:3005"
+    "devDependencies": {
+        "electron": "^8.2.5",
+        "electron-builder": "^22.6.0"
+    }
 }

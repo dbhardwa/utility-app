@@ -5,6 +5,7 @@ import { generateUID } from './utility';
 import BlockUnit from './components/BlockUnit';
 import ToolBar from './components/ToolBar';
 import * as mockBlocks from './mocks/blocks.json';
+import axios from 'axios';
 
 // TODO: Right now the 'uid's are not truly unique. To do that we'll need a helper function.
 function App() {
@@ -16,6 +17,13 @@ function App() {
     const [currentBlock, setCurrentBlock] = useState<Block | null>(null);
 
     useEffect(() => {
+
+        axios.get('/blocks')
+            .then((data) => {
+                setBlocks(data.data);
+            })
+            .catch((error) => console.log(error));
+
         // NOTE: Needs validation that this is working properly.
         let timestamp = new Date().toDateString();
         const currentBlock = blocks.find(block => block.timestamp === timestamp);

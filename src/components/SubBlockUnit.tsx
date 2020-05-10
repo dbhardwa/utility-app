@@ -6,9 +6,8 @@ import 'react-quill/dist/quill.bubble.css';
 import './SubBlockUnit.css';
 
 function SubBlockUnit(props: SubBlockUnitProps) {
-    const [title, setTitle] = useState<string>('');
     const [text, setText] = useState<string>('');
-    const [readOnly, setReadOnly] = useState<boolean>(false);
+    const [readOnly, setReadOnly] = useState<boolean>(props.subBlock.template ? true : false);
 
     useEffect(() => {
         let Inline = Quill.import('blots/inline');
@@ -29,6 +28,10 @@ function SubBlockUnit(props: SubBlockUnitProps) {
         }
 
         Quill.register(LinkBlot);
+
+        setText(
+            parseTemplate(props.subBlock.template)
+        );
     }, []);
 
     // NOTE: The negative lookbehind part is not completely necessary (as it is not fully supported).
@@ -58,13 +61,17 @@ function SubBlockUnit(props: SubBlockUnitProps) {
         ]
     };
 
+    function saveSubBlock() {
+        props.editEntry({
+            ...props.subBlock,
+            tags: [],
+            template: text
+        });
+    }
+
     return (
         <div className="sub-block-unit" id={props.subBlock.uid}>
             <span><b>generic sub-block: {props.subBlock.uid}</b></span>
-            {/* {readOnly ?
-                <span>{title || 'generic sub-block'}</span>
-                : <ReactQuill value={title} theme="bubble" onChange={setTitle} />
-            } */}
             <button onClick={() => props.deleteEntry(props.subBlock.uid)}>delete</button>
             <div>
                 <div className="tags">
@@ -90,7 +97,12 @@ function SubBlockUnit(props: SubBlockUnitProps) {
                         modules={modules}
                     />
                 </div>
-                <button onClick={() => setReadOnly(!readOnly)}>
+                <button
+                    onClick={() => {
+                        if (!readOnly) saveSubBlock();
+                        setReadOnly(!readOnly);
+                    }}
+                >
                     {readOnly ? 'Edit' : 'Save'}
                 </button>
             </div>
@@ -101,6 +113,7 @@ function SubBlockUnit(props: SubBlockUnitProps) {
 interface SubBlockUnitProps {
     subBlock: SubBlock;
     deleteEntry: Function;
+    editEntry: Function;
     setTag: Function;
     query: string;
 }

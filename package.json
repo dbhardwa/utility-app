@@ -7,7 +7,7 @@
         "@testing-library/react": "^9.3.2",
         "@testing-library/user-event": "^7.1.2",
         "@types/jest": "^24.0.0",
-        "@types/node": "^12.0.0",
+        "@types/node": "^13.13.5",
         "@types/react": "^16.9.0",
         "@types/react-datepicker": "^2.11.0",
         "@types/react-dom": "^16.9.0",
@@ -20,7 +20,7 @@
         "typescript": "~3.7.2"
     },
     "homepage": "./",
-    "main": "public/electron.js",
+    "main": "src/electron.ts",
     "scripts": {
         "start": "react-scripts start",
         "build": "react-scripts build",

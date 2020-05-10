@@ -8,7 +8,7 @@ import '../App.css';
 function ToolBar(props: ToolBarProps) {
     // @ts-ignore
     const allTags = mockTags['default'];
-    const { query, tags, date } = props.filterInputs;
+    const { query, tag, date } = props.filterInputs;
 
     function handleTagMultiSelect(event: ChangeEvent) {
         let target = event.nativeEvent.target as HTMLSelectElement,
@@ -43,7 +43,11 @@ function ToolBar(props: ToolBarProps) {
                 onChange={(event) => props.setFilterInputs({ ...props.filterInputs, query: event.target.value })}
             />
 
-            <select multiple onChange={handleTagMultiSelect}>
+            <select
+                onChange={(event) => props.setFilterInputs({ ...props.filterInputs, tag: event.target.value })}
+                value={props.filterInputs.tag}
+            >
+                <option disabled selected> -- select an option -- </option>
                 {allTags.map((tag: Tag) => (
                     <option value={tag}>#{tag}</option>
                 ))}
@@ -51,7 +55,7 @@ function ToolBar(props: ToolBarProps) {
             <button onClick={() => props.createNewEntry()}>
                 ADD ENTRY
             </button>
-            {(query || tags.length > 0 || date) && (
+            {(query || tag || date) && (
                 <button onClick={() => props.setFilterInputs({ query: '', tags: [], date: null })}>Clear Filters</button>
             )}
         </div>

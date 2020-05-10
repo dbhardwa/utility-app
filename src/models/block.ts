@@ -15,7 +15,7 @@ export interface SubBlock {
 
 export interface FilterInputs {
     query: string;
-    tags: Tag[];
+    tag: Tag;
     date: Date | null;
 }
 

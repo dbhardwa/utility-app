@@ -4,39 +4,21 @@ import { Block, SubBlock, Tag, FilterInputs } from './models/block';
 import { generateUID } from './utility';
 import BlockUnit from './components/BlockUnit';
 import ToolBar from './components/ToolBar';
-import * as mockBlocks from './mocks/blocks.json';
-import axios from 'axios';
 
+// Operations needed for native application.
 const electron = window.require('electron');
 const fs = electron.remote.require('fs');
 
-
 // TODO: Right now the 'uid's are not truly unique. To do that we'll need a helper function.
 function App() {
-    // @ts-ignore (mockBlocks['default'])
     const [blocks, setBlocks] = useState<Block[]>([]);
     const [filteredBlocks, setFilteredBlocks] = useState<Block[] | undefined>(undefined);
-    const [filterInputs, setFilterInputs] = useState<FilterInputs>({ query: '', tags: [], date: null });
-
+    const [filterInputs, setFilterInputs] = useState<FilterInputs>({ query: '', tag: '', date: null });
     const [currentBlock, setCurrentBlock] = useState<Block | null>(null);
 
     useEffect(() => {
-        console.log('test');
-        fs.readFile('/Users/devansh/Desktop/utility-data/blocks.json', (error: Error, data: any) => {
-            if (error) console.log(error);
-            // let myData = JSON.stringify(data);
-            const myData = JSON.parse(data.toString());
-            // let myData = JSON.parse(data);
-            console.log("DATA:", myData);
-            console.log(Object.prototype.toString.call(myData.data));
-            setBlocks(myData);
-        });
-
-        // axios.get('/blocks')
-        //     .then((data) => {
-        //         setBlocks(data.data);
-        //     })
-        //     .catch((error) => console.log(error));
+        const blocks = readBlocks();
+        setBlocks(blocks);
 
         // NOTE: Needs validation that this is working properly.
         let timestamp = new Date().toDateString();
@@ -45,14 +27,30 @@ function App() {
     }, []);
 
     useEffect(() => {
-        const { query, tags, date } = filterInputs;
+        const { query, tag, date } = filterInputs;
 
-        if (!query && !tags.length && !date) {
+        if (!query && !tag && !date) {
             setFilteredBlocks(undefined);
         } else {
             runFilters();
         }
     }, [filterInputs, blocks, currentBlock]);
+
+    function readBlocks(): Block[] {
+        let blocks: Block[] = [];
+
+        const folders = fs.readdirSync('/Users/devansh/Desktop/utility-data');
+
+        folders.forEach((uid: string) => {
+            if (uid.match(/\d{12}/g)) {
+                const data = fs.readFileSync(`/Users/devansh/Desktop/utility-data/${uid}/${uid}.json`);
+                const block: Block = JSON.parse(data.toString());
+                blocks.push(block);
+            }
+        });
+
+        return blocks;
+    }
 
     function createNewEntry() {
         // 1. Generate 'timestamp' and 'UID'.
@@ -97,20 +95,6 @@ function App() {
             return block;
     }
 
-    // NOTE: 
-    // This function assumes 'uid' is truly unique (which should be the case).
-    // Not sure if it is necessary to handle this otherwise.
-    function deleteEntry(uid: string) {
-        let updatedContents: SubBlock[];
-
-        let updatedBlocks = blocks.map(block => {
-            updatedContents = block.contents.filter(subBlock => subBlock.uid !== uid);
-            return evaluateBlockContents(block, block.contents, updatedContents);
-        }).filter((block): block is Block => block !== null);
-
-        setBlocks(updatedBlocks);
-    }
-
     function filterQuery(query: string, source: Block[]): Block[] {
         let filteredContents: SubBlock[];
 
@@ -120,13 +104,13 @@ function App() {
         }).filter((block): block is Block => block !== null);
     }
 
-    function filterTags(tags: Tag[], source: Block[]): Block[] {
+    function filterTags(tag: Tag, source: Block[]): Block[] {
         let filteredContents: SubBlock[];
 
         return source.map(block => {
             filteredContents = block.contents.filter(subBlock => {
                 return subBlock.tags.some(subBlockTag => {
-                    return tags.some(inputTag => inputTag === subBlockTag);
+                    return subBlockTag = tag
                 });
             });
 
@@ -139,18 +123,30 @@ function App() {
     }
 
     function runFilters() {
-        const { query, tags, date } = filterInputs;
+        const { query, tag, date } = filterInputs;
 
         // NOTE: As long as these are synchronous operations, there is no race condition.
         let source = currentBlock ? blocks.slice(0, blocks.length - 1) : blocks;
 
         if (query) source = filterQuery(query, source);
-        if (tags.length > 0) source = filterTags(tags, source);
+        if (tag) source = filterTags(tag, source);
         if (date) source = filterCalendar(date.toDateString(), source);
 
         if (currentBlock) source = [...source, currentBlock];
 
         setFilteredBlocks(source);
+    }
+
+    function updateBlock(updatedBlock: Block | string) {
+        let updatedBlocks: Block[] = [];
+
+        if (typeof updatedBlock === 'string') {
+            updatedBlocks = blocks.filter(block => block.uid !== updatedBlock);
+        } else {
+            updatedBlocks = blocks.map(block => (block.uid === updatedBlock.uid) ? updatedBlock : block);
+        }
+
+        setBlocks(updatedBlocks);
     }
 
     return (
@@ -167,13 +163,15 @@ function App() {
                     <BlockUnit
                         block={block}
                         key={block.uid}
+                        updateBlock={updateBlock}
+
                         // TODO: These below are being prop drilled at the moment.    
-                        deleteEntry={deleteEntry}
                         setTag={(tag: Tag) => {
-                            if (!filterInputs.tags.includes(tag))
-                                setFilterInputs({ ...filterInputs, tags: [...filterInputs.tags, tag] });
+                            if (filterInputs.tag !== tag)
+                                setFilterInputs({ ...filterInputs, tag });
                         }}
                         query={filterInputs.query}
+
                     />
                 )).reverse()}
             </div>

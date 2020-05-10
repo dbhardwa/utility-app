@@ -7,10 +7,9 @@ function generateUID(date: Date): string {
         month = date.getMonth(),
         day = date.getDate(),
         hour = date.getHours(),
-        minute = date.getMinutes(),
-        seconds = date.getSeconds();
+        minute = date.getMinutes();
 
-    return year + appendZero(++month) + appendZero(day) + appendZero(hour) + appendZero(minute) + appendZero(seconds);
+    return year + appendZero(++month) + appendZero(day) + appendZero(hour) + appendZero(minute);
 }
 
 // Append zero to single digit values, useful for converting date values (i.e. '2' ––> '02').

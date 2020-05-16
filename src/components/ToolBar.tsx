@@ -1,13 +1,10 @@
 import React, { ChangeEvent } from 'react'
 import { Tag, FilterInputs } from '../models/block';
-import * as mockTags from '../mocks/tags.json';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../App.css';
 
 function ToolBar(props: ToolBarProps) {
-    // @ts-ignore
-    const allTags = mockTags['default'];
     const { query, tag, date } = props.filterInputs;
 
     function handleTagMultiSelect(event: ChangeEvent) {
@@ -42,8 +39,8 @@ function ToolBar(props: ToolBarProps) {
                 value={query}
                 onChange={(event) => props.setFilterInputs({ ...props.filterInputs, query: event.target.value })}
             />
-
-            <select
+            {/* TODO: Replace with SearchAddSelect component */}
+            {/* <select
                 onChange={(event) => props.setFilterInputs({ ...props.filterInputs, tag: event.target.value })}
                 value={props.filterInputs.tag}
             >
@@ -51,7 +48,7 @@ function ToolBar(props: ToolBarProps) {
                 {allTags.map((tag: Tag) => (
                     <option value={tag}>#{tag}</option>
                 ))}
-            </select>
+            </select> */}
             <button onClick={() => props.createNewEntry()}>
                 ADD ENTRY
             </button>

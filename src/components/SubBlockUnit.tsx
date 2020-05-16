@@ -1,13 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { SubBlock } from '../models/block';
+import React, { useEffect, useState, useContext } from 'react';
+import { SubBlock, Tag, Tags } from '../models/block';
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import 'react-quill/dist/quill.bubble.css';
 import './SubBlockUnit.css';
+import SearchAddSelect from '../recyclables/SearchAddSelect';
+import { TagsContext, ITagsContext } from '../context/tags-context';
 
 function SubBlockUnit(props: SubBlockUnitProps) {
     const [text, setText] = useState<string>('');
+    const [tags, setTags] = useState<Tag[]>([]);
     const [readOnly, setReadOnly] = useState<boolean>(props.subBlock.template ? true : false);
+
+    const tagsContext = useContext<ITagsContext>(TagsContext);
 
     useEffect(() => {
         let Inline = Quill.import('blots/inline');
@@ -34,13 +39,21 @@ function SubBlockUnit(props: SubBlockUnitProps) {
         );
     }, []);
 
-    // NOTE: The negative lookbehind part is not completely necessary (as it is not fully supported).
+    function getFilteredAllTagKeys(allTags: Tags): Tags {
+        const filteredAllTags = Object.assign({}, allTags);
+
+        tags.forEach((tag) => {
+            if (allTags[tag]) delete filteredAllTags[tag];
+        });
+
+        return filteredAllTags;
+    }
+
     function parseTemplate(markup: string): string {
-        // 1. Split the template by our RegExp (/\[\[\d{12}\]\]/g).
-        // 2. Match the same template by our RegExp.
-        let expression = /(?<=\[\[)\d{12}(?=\]\])/g,
-            splitTemplate = markup.split(expression),
-            matchedTemplate = markup.match(/\d{12,14}(?=\]\])/g) || [],
+        const linkRegEx = /(?<=\[\[)\d{12}(?=\]\])/g;
+
+        let splitTemplate = markup.split(linkRegEx),
+            matchedTemplate = markup.match(linkRegEx) || [],
             result = markup;
 
         if (matchedTemplate.length > 0) {
@@ -50,6 +63,7 @@ function SubBlockUnit(props: SubBlockUnitProps) {
         }
 
         return result;
+        // TODO: Bug ––> Goes out of focus upon adding link.
     }
 
     const modules = {
@@ -64,7 +78,7 @@ function SubBlockUnit(props: SubBlockUnitProps) {
     function saveSubBlock() {
         props.editEntry({
             ...props.subBlock,
-            tags: [],
+            tags: [], // TODO: This should be 'tags'.
             template: text
         });
     }
@@ -75,7 +89,15 @@ function SubBlockUnit(props: SubBlockUnitProps) {
             <button onClick={() => props.deleteEntry(props.subBlock.uid)}>delete</button>
             <div>
                 <div className="tags">
-                    {props.subBlock.tags.map((tag, i, tags) => (
+                    <SearchAddSelect
+                        allTags={Object.keys(getFilteredAllTagKeys(tagsContext.allTags))}
+                        addToAllTags={(tag: Tag) => tagsContext.addTag(tagsContext.allTags, tag)}
+
+                        selectedTags={tags}
+                        selectTag={(tag: Tag) => setTags([...tags, tag])}
+                        removeSelectedTag={(tag: Tag) => setTags(tags.filter(iterTag => iterTag !== tag))}
+                    />
+                    {/* {props.subBlock.tags.map((tag, i, tags) => (
                         <span>
                             <span
                                 onClick={() => props.setTag(tag)}
@@ -83,7 +105,7 @@ function SubBlockUnit(props: SubBlockUnitProps) {
                                 className="tag"
                             >#{tag}</span>{(i === tags.length - 1) ? '' : ', '}
                         </span>
-                    ))}
+                    ))} */}
                 </div>
                 <div onDoubleClick={() => { readOnly && setReadOnly(false) }}>
                     <ReactQuill
@@ -114,8 +136,6 @@ interface SubBlockUnitProps {
     subBlock: SubBlock;
     deleteEntry: Function;
     editEntry: Function;
-    setTag: Function;
-    query: string;
 }
 
 export default SubBlockUnit;

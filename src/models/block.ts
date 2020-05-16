@@ -1,3 +1,5 @@
+// TODO: Seperate these into their own files.
+
 export interface Block {
     timestamp: string;
     uid: string;
@@ -20,3 +22,12 @@ export interface FilterInputs {
 }
 
 export type Tag = string;
+
+export interface Tags {
+    [tag: string]: MetaTag
+}
+
+export interface MetaTag {
+    occurances: number;
+    color: string;
+}

@@ -51,8 +51,6 @@ function BlockUnit(props: BlockUnitProps) {
                     key={subBlock.uid}
                     deleteEntry={deleteEntry}
                     editEntry={editEntry}
-                    setTag={props.setTag}
-                    query={props.query}
                 />
             )).reverse()}
         </div>
@@ -61,8 +59,6 @@ function BlockUnit(props: BlockUnitProps) {
 
 interface BlockUnitProps {
     block: Block;
-    setTag: Function;
-    query: string;
     updateBlock: Function;
 }
 

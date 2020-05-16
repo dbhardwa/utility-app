@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Block, SubBlock, Tag, FilterInputs } from './models/block';
-import { generateUID } from './utility';
+import { Block, SubBlock, Tag, FilterInputs, Tags, MetaTag } from './models/block';
+import { generateUID } from './utilities/utility';
 import BlockUnit from './components/BlockUnit';
 import ToolBar from './components/ToolBar';
+import { TagsContext, ITagsContext } from './context/tags-context';
 
 // Operations needed for native application.
 const electron = window.require('electron');
@@ -12,13 +13,17 @@ const fs = electron.remote.require('fs');
 // TODO: Right now the 'uid's are not truly unique. To do that we'll need a helper function.
 function App() {
     const [blocks, setBlocks] = useState<Block[]>([]);
-    const [filteredBlocks, setFilteredBlocks] = useState<Block[] | undefined>(undefined);
-    const [filterInputs, setFilterInputs] = useState<FilterInputs>({ query: '', tag: '', date: null });
     const [currentBlock, setCurrentBlock] = useState<Block | null>(null);
+    const [filteredBlocks, setFilteredBlocks] = useState<Block[] | undefined>(undefined);
+
+    const [filterInputs, setFilterInputs] = useState<FilterInputs>({ query: '', tag: '', date: null });
+    const [tagsContext, setTagsContext] = useState<ITagsContext>({ allTags: {}, addTag });
 
     useEffect(() => {
         const blocks = readBlocks();
         setBlocks(blocks);
+
+        readTags();
 
         // NOTE: Needs validation that this is working properly.
         let timestamp = new Date().toDateString();
@@ -50,6 +55,26 @@ function App() {
         });
 
         return blocks;
+    }
+
+    function readTags() {
+        // NOTE: This assumes this file exists, the app needs to create a new folder & file to start storing tags if this is not the case.
+        const data = fs.readFileSync('/Users/devansh/Desktop/utility-data/TAGS/tags.json');
+        setTagsContext({ ...tagsContext, allTags: JSON.parse(data.toString()) });
+    }
+
+    function addTag(allTags: Tags, tag: Tag) {
+        if (!allTags[tag]) {
+            const metaTag: MetaTag = { occurances: 0, color: '' };
+            const updatedAllTags: Tags = Object.assign(allTags, { [tag]: metaTag });
+
+            fs.writeFile('/Users/devansh/Desktop/utility-data/TAGS/tags.json', JSON.stringify(updatedAllTags), (error: Error) => {
+                if (error) throw error;
+            });
+            setTagsContext({ ...tagsContext, allTags: updatedAllTags });
+        } else {
+            throw new Error('Tag name already exists.');
+        }
     }
 
     function createNewEntry() {
@@ -151,30 +176,23 @@ function App() {
 
     return (
         <div className="App">
-            <ToolBar
-                filterInputs={filterInputs}
-                setFilterInputs={setFilterInputs}
-                blockDates={blocks.map(block => new Date(block.timestamp))}
-                createNewEntry={createNewEntry}
-            />
-            {/* NOTE: This should ideally be a component (i.e. BlockContainer), have to deal with prop drilling though. */}
-            <div className="blocks">
-                {(filteredBlocks || blocks).map((block: Block) => (
-                    <BlockUnit
-                        block={block}
-                        key={block.uid}
-                        updateBlock={updateBlock}
-
-                        // TODO: These below are being prop drilled at the moment.    
-                        setTag={(tag: Tag) => {
-                            if (filterInputs.tag !== tag)
-                                setFilterInputs({ ...filterInputs, tag });
-                        }}
-                        query={filterInputs.query}
-
-                    />
-                )).reverse()}
-            </div>
+            <TagsContext.Provider value={tagsContext}>
+                <ToolBar
+                    filterInputs={filterInputs}
+                    setFilterInputs={setFilterInputs}
+                    blockDates={blocks.map(block => new Date(block.timestamp))}
+                    createNewEntry={createNewEntry}
+                />
+                <div className="blocks">
+                    {(filteredBlocks || blocks).map((block: Block) => (
+                        <BlockUnit
+                            block={block}
+                            key={block.uid}
+                            updateBlock={updateBlock}
+                        />
+                    )).reverse()}
+                </div>
+            </TagsContext.Provider>
         </div>
     );
 }

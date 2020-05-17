@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from 'react';
-import { Tag } from '../models/block';
+import { Tag, Tags } from '../models/tags';
 import './SearchAddSelect.css';
 
 function SearchAddSelect(props: SearchAddSelectProps) {
@@ -14,7 +14,7 @@ function SearchAddSelect(props: SearchAddSelectProps) {
 
         if (query !== '') {
             query = query.replace(/^#/g, '');
-            const filteredTags = props.allTags.filter((tag: Tag) => tag.includes(query));
+            const filteredTags = Object.keys(props.allTags).filter((tag: Tag) => tag.includes(query));
             setFilteredTags(filteredTags);
         } else {
             setFilteredTags(null);
@@ -67,7 +67,7 @@ function SearchAddSelect(props: SearchAddSelectProps) {
                         onChange={(event) => setAdd(event.target.value)}
                     />
                 </div>
-                {(filteredTags || props.allTags).map((tag: Tag) => (
+                {(filteredTags || Object.keys(props.allTags)).map((tag: Tag) => (
                     <div key={tag} onClick={() => props.selectTag(tag)}>
                         <span className="tag">#{tag}</span>
                         {/* TODO: Delete functionality still needed (needs to check if the tag is in use). */}
@@ -80,7 +80,7 @@ function SearchAddSelect(props: SearchAddSelectProps) {
 }
 
 interface SearchAddSelectProps {
-    allTags: Tag[];
+    allTags: Tags;
     addToAllTags: Function;
 
     selectedTags: Tag[];

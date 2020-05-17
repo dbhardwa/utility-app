@@ -1,4 +1,6 @@
-import { Block, SubBlock, Tag } from "../models/block";
+import { Block } from "../models/block";
+import { SubBlock } from "../models/sub-block";
+import { Tag } from "../models/tags";
 
 export default class FilterOperations {
     private static evaluateBlockContents(block: Block, prevContents: SubBlock[], updatedContents: SubBlock[]): Block | null {
@@ -22,13 +24,12 @@ export default class FilterOperations {
         }).filter((block): block is Block => block !== null);
     }
 
-    public static filterTags(tag: Tag, source: Block[]): Block[] {
+    public static filterTags(tags: Tag[], source: Block[]): Block[] {
         let filteredContents: SubBlock[];
-
         return source.map(block => {
             filteredContents = block.contents.filter(subBlock => {
-                return subBlock.tags.some(subBlockTag => {
-                    return subBlockTag = tag
+                return Object.keys(subBlock.tags).some((subBlockTag: Tag) => {
+                    return tags.some(inputTag => inputTag === subBlockTag);
                 });
             });
 

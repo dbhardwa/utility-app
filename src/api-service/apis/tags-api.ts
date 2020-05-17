@@ -1,5 +1,5 @@
 import ApiContainer from "../api-container";
-import { Tags, Tag, MetaTag } from "../../models/block";
+import { Tags, MetaTag, Tag } from "../../models/tags";
 
 // Operations needed for native application.
 const electron = window.require('electron');

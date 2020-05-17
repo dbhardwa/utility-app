@@ -1,5 +1,6 @@
 import React from 'react';
-import { Block, SubBlock } from '../models/block';
+import { Block } from '../models/block';
+import { SubBlock } from "../models/sub-block";
 import SubBlockUnit from './SubBlockUnit';
 import ApiContainer from '../api-service/api-container';
 

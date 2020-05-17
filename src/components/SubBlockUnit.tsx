@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { SubBlock, Tag, Tags } from '../models/block';
+import { Tags, Tag } from "../models/tags";
+import { SubBlock } from "../models/sub-block";
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import 'react-quill/dist/quill.bubble.css';
@@ -39,7 +40,7 @@ function SubBlockUnit(props: SubBlockUnitProps) {
         );
     }, []);
 
-    function getFilteredAllTagKeys(allTags: Tags): Tags {
+    function getFilteredAllTags(allTags: Tags): Tags {
         const filteredAllTags = Object.assign({}, allTags);
 
         tags.forEach((tag) => {
@@ -90,7 +91,7 @@ function SubBlockUnit(props: SubBlockUnitProps) {
             <div>
                 <div className="tags">
                     <SearchAddSelect
-                        allTags={Object.keys(getFilteredAllTagKeys(tagsContext.allTags))}
+                        allTags={getFilteredAllTags(tagsContext.allTags)}
                         addToAllTags={(tag: Tag) => tagsContext.addTag(tagsContext.allTags, tag)}
 
                         selectedTags={tags}

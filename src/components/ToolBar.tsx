@@ -1,11 +1,12 @@
 import React, { ChangeEvent } from 'react'
-import { Tag, FilterInputs } from '../models/block';
+import { Tag } from '../models/tags';
+import { FilterInputs } from "../models/filter-inputs";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../App.css';
 
 function ToolBar(props: ToolBarProps) {
-    const { query, tag, date } = props.filterInputs;
+    const { query, tags, date } = props.filterInputs;
 
     function handleTagMultiSelect(event: ChangeEvent) {
         let target = event.nativeEvent.target as HTMLSelectElement,
@@ -52,7 +53,7 @@ function ToolBar(props: ToolBarProps) {
             <button onClick={() => props.createNewEntry()}>
                 ADD ENTRY
             </button>
-            {(query || tag || date) && (
+            {(query || tags || date) && (
                 <button onClick={() => props.setFilterInputs({ query: '', tags: [], date: null })}>Clear Filters</button>
             )}
         </div>

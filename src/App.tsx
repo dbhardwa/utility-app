@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Block, SubBlock, Tag, FilterInputs, Tags, MetaTag } from './models/block';
+import { Block } from './models/block';
+import { Tags, Tag } from "./models/tags";
+import { FilterInputs } from "./models/filter-inputs";
 import Utilities from './utilities/utilities';
 import BlockUnit from './components/BlockUnit';
 import ToolBar from './components/ToolBar';
@@ -14,7 +16,7 @@ function App() {
     const [currentBlock, setCurrentBlock] = useState<Block | null>(null);
     const [filteredBlocks, setFilteredBlocks] = useState<Block[] | undefined>(undefined);
 
-    const [filterInputs, setFilterInputs] = useState<FilterInputs>({ query: '', tag: '', date: null });
+    const [filterInputs, setFilterInputs] = useState<FilterInputs>({ query: '', tags: {}, date: null });
     const [tagsContext, setTagsContext] = useState<ITagsContext>({ allTags: {}, addTag });
 
     useEffect(() => {
@@ -31,8 +33,8 @@ function App() {
     }, []);
 
     useEffect(() => {
-        const { query, tag, date } = filterInputs;
-        (!query && !tag && !date) ? setFilteredBlocks(undefined) : runFilters();
+        const { query, tags, date } = filterInputs;
+        (!query && Object.keys(tags).length > 0 && !date) ? setFilteredBlocks(undefined) : runFilters();
     }, [filterInputs, blocks, currentBlock]);
 
     function readBlocks() {
@@ -57,7 +59,7 @@ function App() {
         // 3. If block for current day does not exist, generate a block (and subsequeny sub-block).
         if (!currentBlock) {
             // TODO: This should ideally create an instance (i.e. new Block(date)).
-            const newBlock = { timestamp, uid, contents: [{ uid, tags: [], template: '' }] };
+            const newBlock: Block = { timestamp, uid, contents: [{ uid, tags: {}, template: '' }] };
             setCurrentBlock(newBlock);
             setBlocks([...blocks, newBlock]);
         } else { // 4. Else generate a new sub-block in existing block (in a immutable fashion).
@@ -65,7 +67,7 @@ function App() {
                 if (block.timestamp === timestamp) {
                     const newBlock = {
                         ...block,
-                        contents: [...block.contents, { uid, tags: [], template: '' }]
+                        contents: [...block.contents, { uid, tags: {}, template: '' }]
                     };
                     setCurrentBlock(newBlock);
                     return newBlock;
@@ -77,13 +79,13 @@ function App() {
     }
 
     function runFilters() {
-        const { query, tag, date } = filterInputs;
+        const { query, tags, date } = filterInputs;
 
         // NOTE: As long as these are synchronous operations, there is no race condition.
         let source = currentBlock ? blocks.slice(0, blocks.length - 1) : blocks;
 
         if (query) source = FilterOperations.filterQuery(query, source);
-        if (tag) source = FilterOperations.filterTags(tag, source);
+        if (Object.keys(tags).length > 0) source = FilterOperations.filterTags(Object.keys(tags), source);
         if (date) source = FilterOperations.filterCalendar(date.toDateString(), source);
 
         if (currentBlock) source = [...source, currentBlock];

@@ -1,28 +1,17 @@
 import React from 'react';
 import { Block, SubBlock } from '../models/block';
 import SubBlockUnit from './SubBlockUnit';
-
-// Operations needed for native application.
-const electron = window.require('electron');
-const fs = electron.remote.require('fs');
-const path = electron.remote.require('path');
+import ApiContainer from '../api-service/api-container';
 
 function BlockUnit(props: BlockUnitProps) {
     const { uid, timestamp, contents } = props.block;
 
     function writeBlock(updatedBlock: Block | null) {
-        const filePath = `/Users/devansh/Desktop/utility-data/${uid}/${uid}.json`;
-
-        // Case for removing the block entirely.
-        if (!updatedBlock) {
-            fs.rmdirSync(path.dirname(filePath), { recursive: true });
-            props.updateBlock(uid); // NOTE: Pass a second argument for greater clarity instead.
-        } else { // Case for updating block contents.
-            if (!fs.existsSync(path.dirname(filePath)))
-                fs.mkdirSync(path.dirname(filePath));
-
-            fs.writeFileSync(filePath, JSON.stringify(updatedBlock)); // TODO: Error handling needed.
-            props.updateBlock(updatedBlock);
+        try {
+            ApiContainer.blocksApi.writeBlock(updatedBlock, uid);
+            props.readBlocks();
+        } catch (error) {
+            console.log(error); // TODO: Add error handling.
         }
     }
 
@@ -59,7 +48,7 @@ function BlockUnit(props: BlockUnitProps) {
 
 interface BlockUnitProps {
     block: Block;
-    updateBlock: Function;
+    readBlocks: Function;
 }
 
 export default BlockUnit;

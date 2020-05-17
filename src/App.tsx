@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Block, SubBlock, Tag, FilterInputs, Tags, MetaTag } from './models/block';
-import { generateUID } from './utilities/utility';
+import Utilities from './utilities/utilities';
 import BlockUnit from './components/BlockUnit';
 import ToolBar from './components/ToolBar';
 import { TagsContext, ITagsContext } from './context/tags-context';
-
-// Operations needed for native application.
-const electron = window.require('electron');
-const fs = electron.remote.require('fs');
+import ApiContainer from './api-service/api-container';
+import FilterOperations from './utilities/filter-operations';
 
 // TODO: Right now the 'uid's are not truly unique. To do that we'll need a helper function.
 function App() {
@@ -20,10 +18,11 @@ function App() {
     const [tagsContext, setTagsContext] = useState<ITagsContext>({ allTags: {}, addTag });
 
     useEffect(() => {
-        const blocks = readBlocks();
-        setBlocks(blocks);
+        // Initially read in blocks and tags.
+        readBlocks();
 
-        readTags();
+        const allTags = ApiContainer.tagsApi.readTags();
+        setTagsContext({ ...tagsContext, allTags });
 
         // NOTE: Needs validation that this is working properly.
         let timestamp = new Date().toDateString();
@@ -33,54 +32,23 @@ function App() {
 
     useEffect(() => {
         const { query, tag, date } = filterInputs;
-
-        if (!query && !tag && !date) {
-            setFilteredBlocks(undefined);
-        } else {
-            runFilters();
-        }
+        (!query && !tag && !date) ? setFilteredBlocks(undefined) : runFilters();
     }, [filterInputs, blocks, currentBlock]);
 
-    function readBlocks(): Block[] {
-        let blocks: Block[] = [];
-
-        const folders = fs.readdirSync('/Users/devansh/Desktop/utility-data');
-
-        folders.forEach((uid: string) => {
-            if (uid.match(/\d{12}/g)) {
-                const data = fs.readFileSync(`/Users/devansh/Desktop/utility-data/${uid}/${uid}.json`);
-                const block: Block = JSON.parse(data.toString());
-                blocks.push(block);
-            }
-        });
-
-        return blocks;
-    }
-
-    function readTags() {
-        // NOTE: This assumes this file exists, the app needs to create a new folder & file to start storing tags if this is not the case.
-        const data = fs.readFileSync('/Users/devansh/Desktop/utility-data/TAGS/tags.json');
-        setTagsContext({ ...tagsContext, allTags: JSON.parse(data.toString()) });
+    function readBlocks() {
+        const blocks: Block[] = ApiContainer.blocksApi.readBlocks();
+        setBlocks(blocks);
     }
 
     function addTag(allTags: Tags, tag: Tag) {
-        if (!allTags[tag]) {
-            const metaTag: MetaTag = { occurances: 0, color: '' };
-            const updatedAllTags: Tags = Object.assign(allTags, { [tag]: metaTag });
-
-            fs.writeFile('/Users/devansh/Desktop/utility-data/TAGS/tags.json', JSON.stringify(updatedAllTags), (error: Error) => {
-                if (error) throw error;
-            });
-            setTagsContext({ ...tagsContext, allTags: updatedAllTags });
-        } else {
-            throw new Error('Tag name already exists.');
-        }
+        const updatedAllTags: Tags = ApiContainer.tagsApi.addTag(allTags, tag);
+        setTagsContext({ ...tagsContext, allTags: updatedAllTags });
     }
 
     function createNewEntry() {
         // 1. Generate 'timestamp' and 'UID'.
         let date = new Date(),
-            uid = generateUID(date),
+            uid = Utilities.generateUID(date),
             timestamp = date.toDateString();
 
         // 2. Check if a block for the current day has been made.
@@ -108,70 +76,19 @@ function App() {
         }
     }
 
-    function evaluateBlockContents(block: Block, prevContents: SubBlock[], updatedContents: SubBlock[]): Block | null {
-        // 1. Something was deleted in this block.
-        if (updatedContents.length !== prevContents.length) {
-            if (!updatedContents.length) { // The sub-block deleted was the only sub-block.
-                return null;
-            } else { // The sub-block deleted was one of many.
-                return { ...block, contents: updatedContents };
-            }
-        } else // 2. Nothing was deleted in this block. 
-            return block;
-    }
-
-    function filterQuery(query: string, source: Block[]): Block[] {
-        let filteredContents: SubBlock[];
-
-        return source.map(block => {
-            filteredContents = block.contents.filter(subBlock => subBlock.template.toLowerCase().includes(query.toLowerCase()));
-            return evaluateBlockContents(block, block.contents, filteredContents);
-        }).filter((block): block is Block => block !== null);
-    }
-
-    function filterTags(tag: Tag, source: Block[]): Block[] {
-        let filteredContents: SubBlock[];
-
-        return source.map(block => {
-            filteredContents = block.contents.filter(subBlock => {
-                return subBlock.tags.some(subBlockTag => {
-                    return subBlockTag = tag
-                });
-            });
-
-            return evaluateBlockContents(block, block.contents, filteredContents);
-        }).filter((block): block is Block => block !== null);
-    }
-
-    function filterCalendar(timestamp: string, source: Block[]): Block[] {
-        return source.filter(block => block.timestamp === timestamp);
-    }
-
     function runFilters() {
         const { query, tag, date } = filterInputs;
 
         // NOTE: As long as these are synchronous operations, there is no race condition.
         let source = currentBlock ? blocks.slice(0, blocks.length - 1) : blocks;
 
-        if (query) source = filterQuery(query, source);
-        if (tag) source = filterTags(tag, source);
-        if (date) source = filterCalendar(date.toDateString(), source);
+        if (query) source = FilterOperations.filterQuery(query, source);
+        if (tag) source = FilterOperations.filterTags(tag, source);
+        if (date) source = FilterOperations.filterCalendar(date.toDateString(), source);
 
         if (currentBlock) source = [...source, currentBlock];
 
         setFilteredBlocks(source);
-    }
-
-    function updateBlock(updatedBlock: Block | string) {
-        let updatedBlocks: Block[] = [];
-
-        if (typeof updatedBlock === 'string') {
-            updatedBlocks = blocks.filter(block => block.uid !== updatedBlock);
-        } else {
-            updatedBlocks = blocks.map(block => (block.uid === updatedBlock.uid) ? updatedBlock : block);
-        }
-
-        setBlocks(updatedBlocks);
     }
 
     return (
@@ -188,7 +105,7 @@ function App() {
                         <BlockUnit
                             block={block}
                             key={block.uid}
-                            updateBlock={updateBlock}
+                            readBlocks={readBlocks}
                         />
                     )).reverse()}
                 </div>

@@ -1,24 +1,15 @@
-import React, { ChangeEvent } from 'react'
-import { Tag } from '../models/tags';
+import React, { ChangeEvent, useContext } from 'react'
+import { Tag, Tags } from '../models/tags';
 import { FilterInputs } from "../models/filter-inputs";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../App.css';
+import SearchAddSelect from '../recyclables/SearchAddSelect';
+import { ITagsContext, TagsContext } from '../context/tags-context';
 
 function ToolBar(props: ToolBarProps) {
     const { query, tags, date } = props.filterInputs;
-
-    function handleTagMultiSelect(event: ChangeEvent) {
-        let target = event.nativeEvent.target as HTMLSelectElement,
-            selectedTagElements = target.selectedOptions,
-            selectedTags: Tag[] = [];
-
-        for (const tag of selectedTagElements) {
-            selectedTags.push(tag.value);
-        }
-
-        props.setFilterInputs({ ...props.filterInputs, tags: selectedTags });
-    }
+    const tagsContext = useContext<ITagsContext>(TagsContext);
 
     return (
         <div className="tool-bar">
@@ -40,16 +31,17 @@ function ToolBar(props: ToolBarProps) {
                 value={query}
                 onChange={(event) => props.setFilterInputs({ ...props.filterInputs, query: event.target.value })}
             />
-            {/* TODO: Replace with SearchAddSelect component */}
-            {/* <select
-                onChange={(event) => props.setFilterInputs({ ...props.filterInputs, tag: event.target.value })}
-                value={props.filterInputs.tag}
-            >
-                <option disabled selected> -- select an option -- </option>
-                {allTags.map((tag: Tag) => (
-                    <option value={tag}>#{tag}</option>
-                ))}
-            </select> */}
+            <SearchAddSelect
+                disableAdd={true}
+                allTags={tagsContext.getFilteredAllTags(tagsContext.allTags, tags)}
+
+                selectedTags={tags}
+                selectTag={(tag: Tag) => props.setFilterInputs({ ...props.filterInputs, tags: [...tags, tag] })}
+                removeSelectedTag={(tag: Tag) => props.setFilterInputs({
+                    ...props.filterInputs,
+                    tags: tags.filter((iterTag: Tag) => iterTag !== tag)
+                })}
+            />
             <button onClick={() => props.createNewEntry()}>
                 ADD ENTRY
             </button>

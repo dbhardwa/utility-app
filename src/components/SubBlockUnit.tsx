@@ -40,16 +40,6 @@ function SubBlockUnit(props: SubBlockUnitProps) {
         );
     }, []);
 
-    function getFilteredAllTags(allTags: Tags): Tags {
-        const filteredAllTags = Object.assign({}, allTags);
-
-        tags.forEach((tag) => {
-            if (allTags[tag]) delete filteredAllTags[tag];
-        });
-
-        return filteredAllTags;
-    }
-
     function parseTemplate(markup: string): string {
         const linkRegEx = /(?<=\[\[)\d{12}(?=\]\])/g;
 
@@ -91,7 +81,7 @@ function SubBlockUnit(props: SubBlockUnitProps) {
             <div>
                 <div className="tags">
                     <SearchAddSelect
-                        allTags={getFilteredAllTags(tagsContext.allTags)}
+                        allTags={tagsContext.getFilteredAllTags(tagsContext.allTags, tags)}
                         addToAllTags={(tag: Tag) => tagsContext.addTag(tagsContext.allTags, tag)}
 
                         selectedTags={tags}

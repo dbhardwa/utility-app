@@ -1,8 +1,8 @@
-import { Tags } from './tags';
+import { Tag } from './tags';
 
 export interface SubBlock {
     uid: string;
     title?: string;
-    tags: Tags;
+    tags: Tag[];
     template: string;
 }

@@ -28,7 +28,7 @@ export default class FilterOperations {
         let filteredContents: SubBlock[];
         return source.map(block => {
             filteredContents = block.contents.filter(subBlock => {
-                return Object.keys(subBlock.tags).some((subBlockTag: Tag) => {
+                return subBlock.tags.some((subBlockTag: Tag) => {
                     return tags.some(inputTag => inputTag === subBlockTag);
                 });
             });

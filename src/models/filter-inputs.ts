@@ -1,7 +1,7 @@
-import { Tags } from './tags';
+import { Tag } from './tags';
 
 export interface FilterInputs {
     query: string;
-    tags: Tags;
+    tags: Tag[];
     date: Date | null;
 }

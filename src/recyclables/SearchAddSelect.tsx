@@ -23,7 +23,7 @@ function SearchAddSelect(props: SearchAddSelectProps) {
 
     function handleAddTag(event: React.KeyboardEvent<HTMLInputElement>) {
         // TODO: Set any newly added tag to selected as well.
-        if (event.which === 13) {
+        if (event.which === 13 && props.addToAllTags) {
             event.preventDefault();
             props.addToAllTags(add.replace(/^#/g, ''));
             setAdd('');
@@ -59,14 +59,14 @@ function SearchAddSelect(props: SearchAddSelectProps) {
                         onChange={handleQuery}
                     />
                 </div>
-                <div className="add">
+                {(!props.disableAdd) && (<div className="add">
                     <input
                         placeholder="Add new tag..."
                         value={add}
                         onKeyDown={handleAddTag}
                         onChange={(event) => setAdd(event.target.value)}
                     />
-                </div>
+                </div>)}
                 {(filteredTags || Object.keys(props.allTags)).map((tag: Tag) => (
                     <div key={tag} onClick={() => props.selectTag(tag)}>
                         <span className="tag">#{tag}</span>
@@ -80,8 +80,10 @@ function SearchAddSelect(props: SearchAddSelectProps) {
 }
 
 interface SearchAddSelectProps {
+    disableAdd?: Boolean;
+
     allTags: Tags;
-    addToAllTags: Function;
+    addToAllTags?: Function;
 
     selectedTags: Tag[];
     selectTag: Function;

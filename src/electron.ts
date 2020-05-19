@@ -1,8 +1,8 @@
 // NOTE: This file is currently residing in src, when building for production, we may need to move it to public to avoid transpilation.
 // Modules to control application life and create native browser window
 // @ts-ignore
-const { app, BrowserWindow } = require('electron')
-const path = require('path')
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
 
 function createWindow() {
     // Create the browser window.
@@ -15,17 +15,8 @@ function createWindow() {
     })
 
     mainWindow.loadURL('http://localhost:3000');
+    // For building:
     // mainWindow.loadFile(path.join(__dirname, '../build/index.html'));
-    // mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
-
-
-    // and load the index.html of the app.
-    // mainWindow.loadFile(
-    //     path.join(__dirname, '../build/index.html')
-    // );
-
-    // Open the DevTools.
-    // mainWindow.webContents.openDevTools()
 }
 
 // This method will be called when Electron has finished

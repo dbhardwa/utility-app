@@ -31,6 +31,7 @@ export default class BlocksApi {
         return this.blocks;
     }
 
+    //  TODO: This should be private, expose particular operations (i.e. delete, edit, etc.).
     public writeBlock(updatedBlock: Block | null, uid: string): void {
         const blockFilePath = ApiContainer.paths.blockFile(uid);
 
@@ -41,8 +42,9 @@ export default class BlocksApi {
         } else { // Case for updating block contents.
             this.blocks = this.blocks.map(block => (block.uid === uid) ? updatedBlock : block);
 
-            if (!fs.existsSync(path.dirname(blockFilePath)))
+            if (!fs.existsSync(path.dirname(blockFilePath))) {
                 fs.mkdirSync(path.dirname(blockFilePath));
+            }
 
             fs.writeFileSync(blockFilePath, JSON.stringify(updatedBlock));
         }

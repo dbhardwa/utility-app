@@ -5,11 +5,21 @@ import { Tags, MetaTag, Tag } from "../../models/tags";
 const electron = window.require('electron');
 const fs = electron.remote.require('fs');
 
-// TODO: Needs proper error handling.
 export default class TagsApi {
     public readTags(): Tags {
-        // TODO: This assumes this file exists, the app needs to create a new folder & file to start storing tags if this is not the case.
-        const data = fs.readFileSync(ApiContainer.paths.tagsFile());
+        const tagsFilePath = ApiContainer.paths.tagsFile();
+
+        // Check if the file and directory exists (if not, make it).
+        if (!fs.existsSync(tagsFilePath)) {
+            if (!fs.existsSync(path.dirname(tagsFilePath))) {
+                fs.mkdirSync(path.dirname(tagsFilePath));
+            }
+
+            fs.writeFileSync(tagsFilePath, JSON.stringify({}));
+            return {};
+        }
+
+        const data = fs.readFileSync(tagsFilePath);
         const tags: Tags = JSON.parse(data.toString());
         return tags;
     }

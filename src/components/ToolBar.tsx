@@ -45,12 +45,10 @@ function ToolBar(props: ToolBarProps) {
             <button onClick={() => props.createNewEntry()}>
                 ADD ENTRY
             </button>
-            {(query || tags || date) && (
+            {(query || tags.length > 0 || date) && (
                 <button onClick={() => props.setFilterInputs({ query: '', tags: [], date: null })}>Clear Filters</button>
             )}
         </div>
-
-        /* NOTE: This is not a controlled component, but this element is tentative anyways. */
     );
 }
 

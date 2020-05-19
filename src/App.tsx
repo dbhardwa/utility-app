@@ -32,10 +32,7 @@ function App() {
         currentBlock ? setCurrentBlock(currentBlock) : setCurrentBlock(null);
     }, []);
 
-    useEffect(() => {
-        const { query, tags, date } = filterInputs;
-        (!query && !tags.length && !date) ? setFilteredBlocks(undefined) : runFilters();
-    }, [filterInputs, blocks, currentBlock]);
+    useEffect(runFilters, [filterInputs, blocks, currentBlock]);
 
     function readBlocks() {
         const blocks: Block[] = ApiContainer.blocksApi.readBlocks();
@@ -81,16 +78,19 @@ function App() {
     function runFilters() {
         const { query, tags, date } = filterInputs;
 
-        // NOTE: As long as these are synchronous operations, there is no race condition.
-        let source = currentBlock ? blocks.slice(0, blocks.length - 1) : blocks;
+        if (!query && !tags.length && !date) {
+            setFilteredBlocks(undefined);
+        } else {
+            let source = currentBlock ? blocks.slice(0, blocks.length - 1) : blocks;
 
-        if (query) source = FilterOperations.filterQuery(query, source);
-        if (tags.length > 0) source = FilterOperations.filterTags(tags, source);
-        if (date) source = FilterOperations.filterCalendar(date.toDateString(), source);
+            if (query) source = FilterOperations.filterQuery(query, source);
+            if (tags.length > 0) source = FilterOperations.filterTags(tags, source);
+            if (date) source = FilterOperations.filterCalendar(date.toDateString(), source);
 
-        if (currentBlock) source = [...source, currentBlock];
+            if (currentBlock) source = [...source, currentBlock];
 
-        setFilteredBlocks(source);
+            setFilteredBlocks(source);
+        }
     }
 
     return (
